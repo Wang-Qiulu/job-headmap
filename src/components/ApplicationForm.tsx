@@ -52,9 +52,9 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const errs: Record<string, string> = {}
-    if (!company.trim()) errs.company = 'Required'
-    if (!position.trim()) errs.position = 'Required'
-    if (!applyDate) errs.applyDate = 'Required'
+    if (!company.trim()) errs.company = '必填'
+    if (!position.trim()) errs.position = '必填'
+    if (!applyDate) errs.applyDate = '必填'
     if (Object.keys(errs).length > 0) {
       setErrors(errs)
       return
@@ -69,7 +69,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
         url: url.trim() || undefined,
         notes: notes.trim() || undefined,
       })
-      toast('Application updated', 'success')
+      toast('记录已更新', 'success')
     } else {
       addApplication({
         company: company.trim(),
@@ -79,7 +79,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
         url: url.trim() || undefined,
         notes: notes.trim() || undefined,
       })
-      toast('Application added', 'success')
+      toast('记录已添加', 'success')
     }
     onClose()
   }
@@ -88,12 +88,12 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
     <Modal
       open={open}
       onClose={onClose}
-      title={initial ? 'Edit application' : 'New application'}
+      title={initial ? '编辑记录' : '新建记录'}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Company"
+            label="公司"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             placeholder="ByteDance"
@@ -101,7 +101,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
             autoFocus
           />
           <Input
-            label="Position"
+            label="职位"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
             placeholder="Senior Frontend Engineer"
@@ -111,14 +111,14 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Apply date"
+            label="投递日期"
             type="date"
             value={applyDate}
             onChange={(e) => setApplyDate(e.target.value)}
             error={errors.applyDate}
           />
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-ink-2">Status</label>
+            <label className="text-xs text-ink-2">状态</label>
             <div className="h-9">
               <StatusDropdown
                 value={status}
@@ -131,7 +131,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
         </div>
 
         <Input
-          label="Job URL"
+          label="职位链接"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://..."
@@ -139,18 +139,18 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
         />
 
         <Textarea
-          label="Notes"
+          label="备注"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Recruiter, referral, next steps..."
+          placeholder="招聘人、内推、下一步…"
           rows={4}
         />
 
         <div className="mt-2 flex items-center justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
+            取消
           </Button>
-          <Button type="submit">{initial ? 'Save' : 'Create'}</Button>
+          <Button type="submit">{initial ? '保存' : '创建'}</Button>
         </div>
       </form>
     </Modal>

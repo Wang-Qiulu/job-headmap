@@ -16,7 +16,7 @@ type SortKey = 'applyDate' | 'company' | 'position' | 'status'
 type SortDir = 'asc' | 'desc'
 
 const STATUS_FILTERS: Array<{ value: Status | 'all'; label: string }> = [
-  { value: 'all', label: 'All' },
+  { value: 'all', label: '全部' },
   { value: 'applied', label: STATUS_LABEL.applied },
   { value: 'written', label: STATUS_LABEL.written },
   { value: '1st', label: STATUS_LABEL['1st'] },
@@ -93,9 +93,9 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
   }
 
   const onDelete = (app: Application) => {
-    if (!confirm(`Delete application for ${app.company} — ${app.position}?`)) return
+    if (!confirm(`确认删除「${app.company} — ${app.position}」？`)) return
     deleteApplication(app.id)
-    toast('Application deleted', 'success')
+    toast('记录已删除', 'success')
   }
 
   if (applications.length === 0) {
@@ -104,9 +104,9 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
         <div className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-full bg-bg-mute text-ink-3">
           <Search size={16} />
         </div>
-        <h3 className="text-md font-semibold text-ink-1">No applications yet</h3>
+        <h3 className="text-md font-semibold text-ink-1">还没有记录</h3>
         <p className="mt-1 text-sm text-ink-2">
-          Add your first one to start tracking.
+          添加第一条，开始追踪你的求职进度。
         </p>
       </section>
     )
@@ -160,25 +160,25 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
           <thead>
             <tr className="border-b border-border bg-bg-soft text-xs uppercase tracking-wider text-ink-3">
               <Th onClick={() => handleSort('company')} active={sortKey === 'company'} dir={sortDir}>
-                Company
+                公司
               </Th>
               <Th onClick={() => handleSort('position')} active={sortKey === 'position'} dir={sortDir}>
-                Position
+                职位
               </Th>
               <Th onClick={() => handleSort('applyDate')} active={sortKey === 'applyDate'} dir={sortDir}>
-                Applied
+                投递日期
               </Th>
               <Th onClick={() => handleSort('status')} active={sortKey === 'status'} dir={sortDir}>
-                Status
+                状态
               </Th>
-              <th className="w-24 px-4 py-2 text-right font-medium">Actions</th>
+              <th className="w-24 px-4 py-2 text-right font-medium">操作</th>
             </tr>
           </thead>
           <tbody>
             {pageItems.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-10 text-center text-sm text-ink-3">
-                  No applications match the current filters.
+                  没有匹配的记录
                 </td>
               </tr>
             ) : (
@@ -202,7 +202,7 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
                       onChange={(s) => {
                         if (s === app.status) return
                         changeStatus(app.id, s)
-                        toast(`Status updated: ${STATUS_LABEL[s]}`, 'success')
+                        toast(`状态已更新为：${STATUS_LABEL[s]}`, 'success')
                       }}
                     />
                   </td>
@@ -241,11 +241,11 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
       {filtered.length > 0 && (
         <div className="flex items-center justify-between border-t border-border-soft px-6 py-3 text-xs text-ink-2">
           <span className="font-mono">
-            Showing{' '}
+            显示{' '}
             <span className="text-ink-1 num">
               {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, filtered.length)}
             </span>{' '}
-            of <span className="text-ink-1 num">{filtered.length}</span>
+            / 共 <span className="text-ink-1 num">{filtered.length}</span>
           </span>
           <div className="flex items-center gap-1">
             <button
@@ -253,7 +253,7 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
               disabled={safePage === 0}
               className="rounded px-2 py-1 font-mono text-ink-2 hover:bg-bg-soft disabled:opacity-30"
             >
-              ‹ Prev
+              ‹ 上一页
             </button>
             <span className="px-2 font-mono text-ink-2">
               <span className="text-ink-1 num">{safePage + 1}</span> /{' '}
@@ -264,7 +264,7 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
               disabled={safePage >= pageCount - 1}
               className="rounded px-2 py-1 font-mono text-ink-2 hover:bg-bg-soft disabled:opacity-30"
             >
-              Next ›
+              下一页 ›
             </button>
           </div>
         </div>

@@ -81,14 +81,14 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
   const handleStatusChange = (s: Status) => {
     setDraft({ ...draft, status: s })
     changeStatus(application.id, s)
-    toast(`Status updated: ${STATUS_LABEL[s]}`, 'success')
+    toast(`状态已更新为：${STATUS_LABEL[s]}`, 'success')
   }
 
   const handleDelete = () => {
-    if (!confirm(`Delete application for ${application.company} — ${application.position}?`))
+    if (!confirm(`确认删除「${application.company} — ${application.position}」？`))
       return
     deleteApplication(application.id)
-    toast('Application deleted', 'success')
+    toast('记录已删除', 'success')
     onClose()
   }
 
@@ -152,7 +152,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
                   placeholder="Position"
                 />
                 <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
-                  <span>Applied</span>
+                  <span>投递</span>
                   <input
                     type="date"
                     value={draft.applyDate}
@@ -167,7 +167,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
               {/* Fields */}
               <div className="flex flex-col gap-4 px-6 pt-6">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-ink-2">Status</label>
+                  <label className="text-xs text-ink-2">状态</label>
                   <div>
                     <StatusDropdown
                       value={draft.status}
@@ -178,7 +178,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-ink-2">Job URL</label>
+                  <label className="text-xs text-ink-2">职位链接</label>
                   <div className="relative">
                     <Input
                       type="url"
@@ -200,10 +200,10 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
                 </div>
 
                 <Textarea
-                  label="Notes"
+                  label="备注"
                   value={draft.notes ?? ''}
                   onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-                  placeholder="Recruiter, referral, next steps..."
+                  placeholder="招聘人、内推、下一步…"
                   rows={5}
                 />
               </div>
@@ -212,7 +212,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
               <div className="px-6 pt-8 pb-10">
                 <div className="mb-3 flex items-center gap-2">
                   <span className="text-xs font-mono uppercase tracking-wider text-ink-3">
-                    Timeline
+                    时间线
                   </span>
                   <div className="h-px flex-1 bg-border-soft" />
                 </div>
@@ -249,7 +249,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
                             </span>
                             {isLatest && (
                               <span className="rounded-sm bg-bg-mute px-1.5 py-0.5 text-[10px] font-mono text-ink-2">
-                                current
+                                当前
                               </span>
                             )}
                           </div>
@@ -270,7 +270,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
                 ID <span className="text-ink-2">{application.id.slice(0, 8)}</span>
               </div>
               <Button variant="secondary" onClick={onClose}>
-                Close
+                关闭
               </Button>
             </div>
           </motion.aside>
@@ -295,12 +295,12 @@ function SaveIndicator({ state }: { state: SaveState }) {
           {state === 'saving' ? (
             <>
               <Clock size={12} className="animate-pulse-soft" />
-              Saving...
+              保存中…
             </>
           ) : (
             <>
               <Check size={12} className="text-success" />
-              <span className="text-ink-2">Saved</span>
+              <span className="text-ink-2">已保存</span>
             </>
           )}
         </motion.div>

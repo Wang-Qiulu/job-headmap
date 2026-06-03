@@ -68,31 +68,31 @@ export function HeroStats({ applications }: HeroStatsProps) {
   return (
     <section className="card">
       <div className="flex items-stretch px-6 py-6">
-        <StatCell value={stats.total} label="Applied" sublabel="Total applications" />
+        <StatCell value={stats.total} label="已投递" sublabel="累计" />
         <Divider />
-        <StatCell value={stats.written} label="Written" sublabel="Tests" />
+        <StatCell value={stats.written} label="笔试" />
         <Divider />
-        <StatCell value={stats.first} label="1st" sublabel="Round" />
+        <StatCell value={stats.first} label="一面" />
         <Divider />
-        <StatCell value={stats.second} label="2nd" sublabel="Round" />
+        <StatCell value={stats.second} label="二面" />
         <Divider />
-        <StatCell value={stats.third} label="3rd" sublabel="Round" />
+        <StatCell value={stats.third} label="三面" />
         <Divider />
         <StatCell value={stats.offer} label="Offer" highlight />
         <Divider />
-        <StatCell value={stats.rejected} label="Rejected" sublabel="—" />
+        <StatCell value={stats.rejected} label="已拒绝" />
       </div>
       <div className="flex items-center gap-3 border-t border-border-soft px-6 py-3 text-xs text-ink-2">
         <span className="font-mono">
-          Response rate <span className="text-ink-1 num">{stats.responseRate.toFixed(1)}%</span>
+          回复率 <span className="text-ink-1 num">{stats.responseRate.toFixed(1)}%</span>
         </span>
         <span className="text-ink-3">·</span>
         <span className="font-mono">
-          Offer rate <span className="text-ink-1 num">{stats.offerRate.toFixed(1)}%</span>
+          Offer 率 <span className="text-ink-1 num">{stats.offerRate.toFixed(1)}%</span>
         </span>
         <span className="text-ink-3">·</span>
         <span className="font-mono">
-          Funnel <span className="text-ink-1 num">{stats.offer}/{stats.total}</span>
+          漏斗 <span className="text-ink-1 num">{stats.offer}/{stats.total}</span>
         </span>
       </div>
     </section>

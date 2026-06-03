@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { format, formatDistanceToNow, parseISO, startOfDay, subDays } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import type { Application, Status } from '@/types'
 import { INTERVIEW_STATUSES } from '@/types'
 
@@ -31,7 +32,7 @@ export function formatDate(iso: string, fmt = 'yyyy-MM-dd'): string {
 
 export function formatRelative(iso: string): string {
   try {
-    return formatDistanceToNow(parseISO(iso), { addSuffix: true })
+    return formatDistanceToNow(parseISO(iso), { addSuffix: true, locale: zhCN })
   } catch {
     return iso
   }
@@ -39,7 +40,7 @@ export function formatRelative(iso: string): string {
 
 export function formatDateTime(iso: string): string {
   try {
-    return format(parseISO(iso), 'MMM d, yyyy · h:mm a')
+    return format(parseISO(iso), 'yyyy年M月d日 · HH:mm')
   } catch {
     return iso
   }

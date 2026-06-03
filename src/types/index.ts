@@ -17,14 +17,14 @@ export const STATUSES = [
 export type Status = (typeof STATUSES)[number]
 
 export const STATUS_LABEL: Record<Status, string> = {
-  planned: 'Planned',
-  applied: 'Applied',
-  written: 'Written',
-  '1st': '1st Round',
-  '2nd': '2nd Round',
-  '3rd': '3rd Round',
+  planned: '计划中',
+  applied: '已投递',
+  written: '笔试',
+  '1st': '一面',
+  '2nd': '二面',
+  '3rd': '三面',
   offer: 'Offer',
-  rejected: 'Rejected',
+  rejected: '已拒绝',
 }
 
 // Status groups used in the funnel / heatmap-counting logic
@@ -48,8 +48,8 @@ export const StatusChangeSchema = z.object({
 
 export const ApplicationSchema = z.object({
   id: z.string().uuid(),
-  company: z.string().min(1, 'Company required'),
-  position: z.string().min(1, 'Position required'),
+  company: z.string().min(1, '公司必填'),
+  position: z.string().min(1, '职位必填'),
   applyDate: z.string(), // ISO date YYYY-MM-DD
   status: z.enum(STATUSES),
   statusHistory: z.array(StatusChangeSchema).min(1),

@@ -27,7 +27,7 @@ interface HoverState {
   y: number
 }
 
-const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', '']
+const DAY_LABELS = ['', '一', '', '三', '', '五', '']
 
 export function Heatmap({ applications }: HeatmapProps) {
   const [mode, setMode] = useState<HeatmapMode>('applications')
@@ -52,14 +52,14 @@ export function Heatmap({ applications }: HeatmapProps) {
       weeks.push(days.slice(i, i + 7))
     }
 
-    // Month label: show "MMM" on the first week whose first day starts a new month
+    // Month label: show "M月" on the first week whose first day starts a new month
     const labels: (string | null)[] = []
     let lastMonth = -1
     weeks.forEach((week) => {
       const d = week[0]
       if (d && d.getMonth() !== lastMonth) {
         lastMonth = d.getMonth()
-        labels.push(format(d, 'MMM'))
+        labels.push(format(d, 'M月'))
       } else {
         labels.push(null)
       }
@@ -91,15 +91,15 @@ export function Heatmap({ applications }: HeatmapProps) {
             {totals}
           </span>
           <span className="text-sm text-ink-2">
-            {mode === 'applications' ? 'applications' : 'interviews'} in the last 6 months
+            次{mode === 'applications' ? '投递' : '面试'} · 近 6 个月
           </span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 text-xs text-ink-2">
             <Flame size={12} className="text-ink-3" />
             <span className="font-mono">
-              Longest streak{' '}
-              <span className="text-ink-1 num">{streak.longest}</span> days
+              最长连续{' '}
+              <span className="text-ink-1 num">{streak.longest}</span> 天
             </span>
           </div>
         </div>
@@ -113,12 +113,12 @@ export function Heatmap({ applications }: HeatmapProps) {
           options={[
             {
               value: 'applications',
-              label: 'Applications',
+              label: '投递',
               icon: <Briefcase size={11} />,
             },
             {
               value: 'interviews',
-              label: 'Interviews',
+              label: '面试',
               icon: <Calendar size={11} />,
             },
           ]}
@@ -217,7 +217,7 @@ export function Heatmap({ applications }: HeatmapProps) {
 
           {/* Legend */}
           <div className="mt-4 flex items-center justify-end gap-1.5 text-[10px] text-ink-3">
-            <span className="font-mono">Less</span>
+            <span className="font-mono">少</span>
             {[0, 1, 2, 3, 4].map((level) => (
               <div
                 key={level}
@@ -231,7 +231,7 @@ export function Heatmap({ applications }: HeatmapProps) {
                 )}
               />
             ))}
-            <span className="font-mono">More</span>
+            <span className="font-mono">多</span>
           </div>
 
           {/* Tooltip */}
@@ -248,11 +248,12 @@ export function Heatmap({ applications }: HeatmapProps) {
                   top: hover.y - 8,
                 }}
               >
-                <div className="font-mono text-ink-1 num">
-                  {hover.count} {hover.count === 1 ? 'contribution' : 'contributions'}
+                <div className="text-ink-1">
+                  <span className="num font-mono">{hover.count}</span>{' '}
+                  <span className="font-mono">次</span>
                 </div>
                 <div className="font-mono text-[10px] text-ink-3">
-                  {format(parseISO(hover.date), 'MMMM d, yyyy')}
+                  {format(parseISO(hover.date), 'yyyy年M月d日')}
                 </div>
               </motion.div>
             )}

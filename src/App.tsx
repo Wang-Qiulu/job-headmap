@@ -60,15 +60,14 @@ export default function App() {
       <footer className="container-page pb-8 pt-2">
         <div className="flex items-center justify-between text-xs text-ink-3">
           <span className="font-mono">
-            <span className="num">{applications.length}</span>{' '}
-            {applications.length === 1 ? 'application' : 'applications'} · stored locally
+            共 <span className="num">{applications.length}</span> 条记录 · 本地存储
           </span>
           <span className="font-mono">
-            Press{' '}
+            按{' '}
             <kbd className="rounded border border-border bg-bg-soft px-1 py-0.5 text-[10px] text-ink-2">
               N
             </kbd>{' '}
-            to add new
+            新建
           </span>
         </div>
       </footer>
@@ -89,7 +88,7 @@ export default function App() {
 
       {!hasHydrated && (
         <div className="pointer-events-none fixed inset-0 grid place-items-center bg-bg/60 backdrop-blur-sm">
-          <div className="font-mono text-xs text-ink-3">Loading…</div>
+          <div className="font-mono text-xs text-ink-3">加载中…</div>
         </div>
       )}
     </div>

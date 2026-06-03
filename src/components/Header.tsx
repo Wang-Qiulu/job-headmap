@@ -45,13 +45,13 @@ export function Header({ search, onSearchChange, onAdd }: HeaderProps) {
               type="text"
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search company, position..."
+              placeholder="搜索公司、职位…"
               className="h-8 w-full rounded-md border border-border bg-bg-mute pl-8 pr-3 font-mono text-xs text-ink-1 placeholder:text-ink-3 focus:border-ink-1 focus:bg-bg focus:outline-none"
             />
           </div>
           <Button onClick={onAdd} size="md" className="font-mono">
             <Plus size={14} strokeWidth={2.5} />
-            <span className="hidden sm:inline">New</span>
+            <span className="hidden sm:inline">新建</span>
             <kbd className="hidden font-mono text-[10px] text-bg/60 md:inline">N</kbd>
           </Button>
         </div>
