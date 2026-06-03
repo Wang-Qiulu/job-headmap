@@ -49,7 +49,7 @@
 
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-[1200px] px-8;
+    @apply mx-auto w-full max-w-[1500px] px-6;
   }
 
   .card {

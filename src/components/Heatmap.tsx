@@ -1,7 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import {
   addDays,
-  eachDayOfInterval,
   endOfWeek,
   format,
   isSameDay,
@@ -11,12 +10,10 @@ import {
 } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Flame, Calendar, Briefcase } from 'lucide-react'
-import { buildHeatmap, computeStreak, getHeatmapLevel, type HeatmapMode } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { buildHeatmap, computeStreak, getHeatmapLevel, cn, type HeatmapMode } from '@/lib/utils'
 import type { Application } from '@/types'
 
-const DAYS = 26 * 7 // ~26 weeks (6 months) — backfill to whole weeks
-const CELL = 12
+const WEEKS = 26
 const GAP = 3
 
 interface HeatmapProps {
@@ -30,35 +27,45 @@ interface HoverState {
   y: number
 }
 
+const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', '']
+
 export function Heatmap({ applications }: HeatmapProps) {
   const [mode, setMode] = useState<HeatmapMode>('applications')
   const [hover, setHover] = useState<HoverState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Build the heatmap data over the last 26 weeks
-  const { grid, heatmap, totals, streak, monthLabels } = useMemo(() => {
+  const { weeks, heatmap, totals, streak, monthLabels } = useMemo(() => {
     const today = new Date()
-    // End the grid on the Saturday of the current week
     const gridEnd = endOfWeek(today, { weekStartsOn: 0 })
-    const gridStart = startOfWeek(subWeeks(gridEnd, 25), { weekStartsOn: 0 })
-    const days = eachDayOfInterval({ start: gridStart, end: gridEnd })
+    const gridStart = startOfWeek(subWeeks(gridEnd, WEEKS - 1), { weekStartsOn: 0 })
 
-    const heatmap = buildHeatmap(applications, DAYS, mode)
+    const days: Date[] = []
+    for (let d = gridStart; d <= gridEnd; d = addDays(d, 1)) days.push(d)
+
+    const heatmap = buildHeatmap(applications, WEEKS * 7, mode)
     const totals = Array.from(heatmap.values()).reduce((a, b) => a + b, 0)
     const streak = computeStreak(heatmap)
 
-    // Build month labels by scanning week columns
-    const monthLabels: Array<{ weekIndex: number; label: string }> = []
+    // Group into weeks (column-major)
+    const weeks: Date[][] = []
+    for (let i = 0; i < days.length; i += 7) {
+      weeks.push(days.slice(i, i + 7))
+    }
+
+    // Month label: show "MMM" on the first week whose first day starts a new month
+    const labels: (string | null)[] = []
     let lastMonth = -1
-    days.forEach((d, i) => {
-      const weekIndex = Math.floor(i / 7)
-      if (i % 7 === 0 && d.getMonth() !== lastMonth) {
+    weeks.forEach((week) => {
+      const d = week[0]
+      if (d && d.getMonth() !== lastMonth) {
         lastMonth = d.getMonth()
-        monthLabels.push({ weekIndex, label: format(d, "MMM ''yy") })
+        labels.push(format(d, 'MMM'))
+      } else {
+        labels.push(null)
       }
     })
 
-    return { grid: days, heatmap, totals, streak, monthLabels }
+    return { weeks, heatmap, totals, streak, monthLabels: labels }
   }, [applications, mode])
 
   // Track mouse for tooltip positioning
@@ -120,100 +127,108 @@ export function Heatmap({ applications }: HeatmapProps) {
 
       {/* Heatmap grid */}
       <div className="px-6 py-5">
-        <div ref={containerRef} className="relative inline-block">
-          {/* Month labels */}
-          <div
-            className="ml-7 mb-1.5 grid"
-            style={{
-              gridTemplateColumns: `repeat(${grid.length / 7}, ${CELL}px)`,
-              columnGap: `${GAP}px`,
-            }}
-          >
-            {Array.from({ length: grid.length / 7 }).map((_, weekIndex) => {
-              const month = monthLabels.find((m) => m.weekIndex === weekIndex)
-              return (
-                <div key={weekIndex} className="h-3 text-[10px] font-mono text-ink-3">
-                  {month ? month.label : ''}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Grid: 7 rows × N weeks */}
-          <div className="flex gap-0">
-            {/* Day-of-week labels */}
-            <div className="mr-2 flex flex-col" style={{ rowGap: `${GAP}px` }}>
-              {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((label, i) => (
+        <div ref={containerRef} className="relative">
+          <div className="flex w-full items-stretch gap-x-2">
+            {/* Day-of-week labels — grid rows stretch to match the cell rows */}
+            <div
+              className="grid shrink-0 grid-rows-7"
+              style={{ width: 24, rowGap: `${GAP}px` }}
+            >
+              {DAY_LABELS.map((label, i) => (
                 <div
                   key={i}
-                  className="text-[10px] font-mono text-ink-3"
-                  style={{ height: `${CELL}px`, lineHeight: `${CELL}px` }}
+                  className="flex items-center text-[10px] font-mono uppercase tracking-wider text-ink-3"
+                  style={{ lineHeight: 1 }}
                 >
                   {label}
                 </div>
               ))}
             </div>
 
-            {/* Day cells */}
-            <div
-              className="grid"
-              style={{
-                gridTemplateRows: `repeat(7, ${CELL}px)`,
-                gridAutoFlow: 'column',
-                columnGap: `${GAP}px`,
-                rowGap: `${GAP}px`,
-              }}
-              onMouseLeave={() => setHover(null)}
-            >
-              {grid.map((day) => {
-                const dateISO = format(day, 'yyyy-MM-dd')
-                const count = heatmap.get(dateISO) ?? 0
-                const level = getHeatmapLevel(count)
-                const isToday = isSameDay(day, new Date())
-                return (
+            <div className="flex-1 min-w-0">
+              {/* Month labels — share the same column template as the cells */}
+              <div
+                className="mb-1.5 grid"
+                style={{
+                  gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
+                  columnGap: `${GAP}px`,
+                }}
+              >
+                {monthLabels.map((label, i) => (
                   <div
-                    key={dateISO}
-                    onMouseEnter={(e) => {
-                      const rect = containerRef.current!.getBoundingClientRect()
-                      setHover({
-                        date: dateISO,
-                        count,
-                        x: e.clientX - rect.left,
-                        y: e.clientY - rect.top,
-                      })
-                    }}
-                    className={cn(
-                      'rounded-[2px] transition-all duration-150',
-                      level === 0 && 'bg-heatmap-0',
-                      level === 1 && 'bg-heatmap-1',
-                      level === 2 && 'bg-heatmap-2',
-                      level === 3 && 'bg-heatmap-3',
-                      level === 4 && 'bg-heatmap-4',
-                      isToday && 'ring-1 ring-ink-1 ring-inset',
-                      'hover:scale-110 hover:ring-1 hover:ring-ink-1 hover:ring-inset',
-                    )}
-                    style={{ width: CELL, height: CELL }}
-                  />
-                )
-              })}
+                    key={i}
+                    className="truncate text-[10px] font-mono uppercase tracking-wider text-ink-3"
+                  >
+                    {label ?? ''}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day cells */}
+              <div
+                className="grid"
+                style={{
+                  gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
+                  columnGap: `${GAP}px`,
+                }}
+                onMouseLeave={() => setHover(null)}
+              >
+                {weeks.map((week, wi) => (
+                  <div
+                    key={wi}
+                    className="grid grid-rows-7"
+                    style={{ rowGap: `${GAP}px` }}
+                  >
+                    {week.map((day) => {
+                      const dateISO = format(day, 'yyyy-MM-dd')
+                      const count = heatmap.get(dateISO) ?? 0
+                      const level = getHeatmapLevel(count)
+                      const isToday = isSameDay(day, new Date())
+                      return (
+                        <div
+                          key={dateISO}
+                          onMouseEnter={(e) => {
+                            const rect = containerRef.current!.getBoundingClientRect()
+                            setHover({
+                              date: dateISO,
+                              count,
+                              x: e.clientX - rect.left,
+                              y: e.clientY - rect.top,
+                            })
+                          }}
+                          className={cn(
+                            'aspect-square w-full rounded-[2px] transition-all duration-150',
+                            level === 0 && 'bg-heatmap-0',
+                            level === 1 && 'bg-heatmap-1',
+                            level === 2 && 'bg-heatmap-2',
+                            level === 3 && 'bg-heatmap-3',
+                            level === 4 && 'bg-heatmap-4',
+                            isToday && 'ring-1 ring-ink-1 ring-inset',
+                            'hover:scale-110 hover:ring-1 hover:ring-ink-1 hover:ring-inset',
+                          )}
+                        />
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Legend */}
-          <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-ink-3">
+          <div className="mt-4 flex items-center justify-end gap-1.5 text-[10px] text-ink-3">
             <span className="font-mono">Less</span>
             {[0, 1, 2, 3, 4].map((level) => (
               <div
                 key={level}
                 className={cn(
-                  'rounded-[2px]',
+                  'h-3 w-3 rounded-[2px]',
                   level === 0 && 'bg-heatmap-0',
                   level === 1 && 'bg-heatmap-1',
                   level === 2 && 'bg-heatmap-2',
                   level === 3 && 'bg-heatmap-3',
                   level === 4 && 'bg-heatmap-4',
                 )}
-                style={{ width: CELL, height: CELL }}
               />
             ))}
             <span className="font-mono">More</span>
@@ -289,6 +304,3 @@ function SegmentedControl<T extends string>({
     </div>
   )
 }
-
-// helper used elsewhere if needed
-export const _addDays = addDays
