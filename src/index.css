@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-bg text-ink-1 font-sans text-sm;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+
+  /* Tabular numbers everywhere for the "dashboard" feel */
+  .font-mono,
+  code,
+  kbd,
+  samp,
+  pre {
+    font-feature-settings: 'tnum', 'zero', 'ss01';
+  }
+
+  /* Subtle scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-3;
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: 2px solid #111827;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-[1200px] px-8;
+  }
+
+  .card {
+    @apply bg-bg border border-border rounded-lg;
+  }
+
+  /* Custom number styling for the dashboard look */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum', 'zero';
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
