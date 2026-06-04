@@ -126,8 +126,10 @@ interface AppState {
 
   // actions
   addApplication: (input: Omit<Application, 'id' | 'statusHistory' | 'createdAt' | 'updatedAt'>) => Application
-  updateApplication: (id: string, patch: Partial<Omit<Application, 'id' | 'createdAt'>>) => void
-  changeStatus: (id: string, status: Status) => void
+  // status changes go through `changeStatus` so the timeline is appended —
+  // updateApplication's type forbids `status` to make that a compile error.
+  updateApplication: (id: string, patch: Partial<Omit<Application, 'id' | 'createdAt' | 'status'>>) => void
+  changeStatus: (id: string, status: Status, changedAt?: string) => void
   deleteApplication: (id: string) => void
   clearAll: () => void
   loadSampleData: () => void
@@ -162,19 +164,19 @@ export const useStore = create<AppState>()(
         }))
       },
 
-      changeStatus: (id, status) => {
+      changeStatus: (id, status, changedAt) => {
         set((s) => ({
           applications: s.applications.map((a) => {
             if (a.id !== id) return a
             if (a.status === status) return a
-            const now = toISODateTime()
+            const at = changedAt ?? toISODateTime()
             return {
               ...a,
               status,
-              updatedAt: now,
+              updatedAt: at,
               statusHistory: [
                 ...a.statusHistory,
-                { status, changedAt: now },
+                { status, changedAt: at },
               ],
             }
           }),

@@ -44,7 +44,9 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
     return () => document.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  // Debounced autosave on any draft change
+  // Debounced autosave on any draft change. Note: status is excluded — the
+  // store's `updateApplication` type forbids it, and status changes go
+  // through `changeStatus` so the timeline gets appended.
   useEffect(() => {
     if (!draft || !application) return
     if (
@@ -64,7 +66,6 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
         company: draft.company,
         position: draft.position,
         applyDate: draft.applyDate,
-        status: draft.status,
         url: draft.url || undefined,
         notes: draft.notes || undefined,
       })
@@ -79,6 +80,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
   if (!application || !draft) return null
 
   const handleStatusChange = (s: Status) => {
+    if (s === application.status) return
     setDraft({ ...draft, status: s })
     changeStatus(application.id, s)
     toast(`状态已更新为：${STATUS_LABEL[s]}`, 'success')

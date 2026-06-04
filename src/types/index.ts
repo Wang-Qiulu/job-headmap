@@ -29,14 +29,6 @@ export const STATUS_LABEL: Record<Status, string> = {
 
 // Status groups used in the funnel / heatmap-counting logic
 export const INTERVIEW_STATUSES: Status[] = ['1st', '2nd', '3rd']
-export const ACTIVE_STATUSES: Status[] = [
-  'planned',
-  'applied',
-  'written',
-  ...INTERVIEW_STATUSES,
-  'offer',
-]
-export const TERMINAL_STATUSES: Status[] = ['offer', 'rejected']
 
 // ─────────────────────────────────────────────────────────
 // Schemas

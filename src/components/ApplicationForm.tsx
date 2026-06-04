@@ -19,6 +19,7 @@ const todayISO = () => toISODate(new Date())
 export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps) {
   const addApplication = useStore((s) => s.addApplication)
   const updateApplication = useStore((s) => s.updateApplication)
+  const changeStatus = useStore((s) => s.changeStatus)
 
   const [company, setCompany] = useState('')
   const [position, setPosition] = useState('')
@@ -65,10 +66,13 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
         company: company.trim(),
         position: position.trim(),
         applyDate,
-        status,
         url: url.trim() || undefined,
         notes: notes.trim() || undefined,
       })
+      // Status changes go through `changeStatus` so the timeline is appended
+      if (status !== initial.status) {
+        changeStatus(initial.id, status)
+      }
       toast('记录已更新', 'success')
     } else {
       addApplication({
