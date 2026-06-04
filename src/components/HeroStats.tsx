@@ -84,15 +84,15 @@ export function HeroStats({ applications }: HeroStatsProps) {
       </div>
       <div className="flex items-center gap-3 border-t border-border-soft px-6 py-3 text-xs text-ink-2">
         <span className="font-mono">
-          回复率 <span className="text-ink-1 num">{stats.responseRate.toFixed(1)}%</span>
+          回复率 <span className="text-ink-1 num">{stats.replyRate.toFixed(1)}%</span>
+        </span>
+        <span className="text-ink-3">·</span>
+        <span className="font-mono">
+          进面率 <span className="text-ink-1 num">{stats.interviewRate.toFixed(1)}%</span>
         </span>
         <span className="text-ink-3">·</span>
         <span className="font-mono">
           Offer 率 <span className="text-ink-1 num">{stats.offerRate.toFixed(1)}%</span>
-        </span>
-        <span className="text-ink-3">·</span>
-        <span className="font-mono">
-          漏斗 <span className="text-ink-1 num">{stats.offer}/{stats.applied}</span>
         </span>
       </div>
     </section>

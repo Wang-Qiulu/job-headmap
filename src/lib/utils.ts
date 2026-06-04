@@ -116,9 +116,11 @@ export interface FunnelStats {
   third: number
   offer: number
   rejected: number
-  /** Of those who ever applied, how many got past the initial screen. */
-  responseRate: number
-  /** Of those who ever applied, how many got an offer. */
+  /** 回复率: deduped apps that reached written OR any interview / offer stage. */
+  replyRate: number
+  /** 进面率: deduped apps that ever reached 1st round. */
+  interviewRate: number
+  /** Offer 率: deduped apps that ever reached offer. */
   offerRate: number
 }
 
@@ -133,16 +135,41 @@ export function computeFunnel(apps: Application[]): FunnelStats {
     offer: 0,
     rejected: 0,
   }
+
+  // Deduped ID-sets: count each application only once per rate metric
+  const repliedIds = new Set<string>()
+  const interviewedIds = new Set<string>()
+  const offerIds = new Set<string>()
+
   for (const app of apps) {
     const reached = new Set<Status>()
     reached.add(app.status)
     for (const h of app.statusHistory) reached.add(h.status)
     for (const s of reached) counts[s]++
+
+    // 回复率：到达过笔试或任意面试/offer 阶段（同一应用多阶段只计 1 次）
+    if (
+      reached.has('written') ||
+      reached.has('1st') ||
+      reached.has('2nd') ||
+      reached.has('3rd') ||
+      reached.has('offer')
+    ) {
+      repliedIds.add(app.id)
+    }
+
+    // 进面率：到达过一面
+    if (reached.has('1st')) {
+      interviewedIds.add(app.id)
+    }
+
+    // Offer 率：到达过 offer
+    if (reached.has('offer')) {
+      offerIds.add(app.id)
+    }
   }
 
   const applied = counts.applied
-  const responded =
-    counts.written + counts['1st'] + counts['2nd'] + counts['3rd'] + counts.offer
   return {
     applied,
     written: counts.written,
@@ -151,8 +178,9 @@ export function computeFunnel(apps: Application[]): FunnelStats {
     third: counts['3rd'],
     offer: counts.offer,
     rejected: counts.rejected,
-    responseRate: applied > 0 ? (responded / applied) * 100 : 0,
-    offerRate: applied > 0 ? (counts.offer / applied) * 100 : 0,
+    replyRate: applied > 0 ? (repliedIds.size / applied) * 100 : 0,
+    interviewRate: applied > 0 ? (interviewedIds.size / applied) * 100 : 0,
+    offerRate: applied > 0 ? (offerIds.size / applied) * 100 : 0,
   }
 }
 
