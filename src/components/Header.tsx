@@ -28,7 +28,7 @@ export function Header({ search, onSearchChange, onAdd }: HeaderProps) {
             </svg>
           </div>
           <span className="text-md font-semibold tracking-tight text-ink-1">
-            Job Dashboard
+            找工作记录
           </span>
           <span className="hidden font-mono text-xs text-ink-3 sm:inline">
             v0.1

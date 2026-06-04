@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import {
   addDays,
+  addWeeks,
   endOfWeek,
   format,
   isSameDay,
@@ -13,7 +14,9 @@ import { Flame, Calendar, Briefcase } from 'lucide-react'
 import { buildHeatmap, computeStreak, getHeatmapLevel, cn, type HeatmapMode } from '@/lib/utils'
 import type { Application } from '@/types'
 
-const WEEKS = 26
+const PAST_WEEKS = 12
+const FUTURE_WEEKS = 3
+const TOTAL_WEEKS = PAST_WEEKS + 1 + FUTURE_WEEKS // 16
 const GAP = 3
 
 interface HeatmapProps {
@@ -36,13 +39,13 @@ export function Heatmap({ applications }: HeatmapProps) {
 
   const { weeks, heatmap, totals, streak, monthLabels } = useMemo(() => {
     const today = new Date()
-    const gridEnd = endOfWeek(today, { weekStartsOn: 0 })
-    const gridStart = startOfWeek(subWeeks(gridEnd, WEEKS - 1), { weekStartsOn: 0 })
+    const gridEnd = endOfWeek(addWeeks(today, FUTURE_WEEKS), { weekStartsOn: 0 })
+    const gridStart = startOfWeek(subWeeks(today, PAST_WEEKS), { weekStartsOn: 0 })
 
     const days: Date[] = []
     for (let d = gridStart; d <= gridEnd; d = addDays(d, 1)) days.push(d)
 
-    const heatmap = buildHeatmap(applications, WEEKS * 7, mode)
+    const heatmap = buildHeatmap(applications, TOTAL_WEEKS * 7, mode)
     const totals = Array.from(heatmap.values()).reduce((a, b) => a + b, 0)
     const streak = computeStreak(heatmap)
 
@@ -91,7 +94,7 @@ export function Heatmap({ applications }: HeatmapProps) {
             {totals}
           </span>
           <span className="text-sm text-ink-2">
-            次{mode === 'applications' ? '投递' : '面试'} · 近 6 个月
+            次{mode === 'applications' ? '投递' : '面试'} · 近 4 个月
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -150,7 +153,7 @@ export function Heatmap({ applications }: HeatmapProps) {
               <div
                 className="mb-1.5 grid"
                 style={{
-                  gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${TOTAL_WEEKS}, minmax(0, 1fr))`,
                   columnGap: `${GAP}px`,
                 }}
               >
@@ -168,7 +171,7 @@ export function Heatmap({ applications }: HeatmapProps) {
               <div
                 className="grid"
                 style={{
-                  gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${TOTAL_WEEKS}, minmax(0, 1fr))`,
                   columnGap: `${GAP}px`,
                 }}
                 onMouseLeave={() => setHover(null)}
