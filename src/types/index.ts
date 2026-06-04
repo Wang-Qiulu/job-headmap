@@ -30,6 +30,32 @@ export const STATUS_LABEL: Record<Status, string> = {
 // Status groups used in the funnel / heatmap-counting logic
 export const INTERVIEW_STATUSES: Status[] = ['1st', '2nd', '3rd']
 
+// Statuses that represent a closed loop — used to gate "re-open" actions
+export const TERMINAL_STATUSES: Status[] = ['offer', 'rejected']
+
+// Legal next-state transitions. Direction rules:
+//   - planned / applied: can jump directly to any later state
+//   - written: cannot go back to planned / applied
+//   - 1st / 2nd / 3rd (interview): cannot go backward
+//   - offer: locked except to rejected
+//   - rejected: explicit re-apply path back to applied
+// Skipping intermediate stages (e.g. no written → 1st, no 2nd → offer) is OK.
+export const STATUS_TRANSITIONS: Record<Status, readonly Status[]> = {
+  planned: ['applied', 'written', '1st', '2nd', '3rd', 'offer', 'rejected'],
+  applied: ['written', '1st', '2nd', '3rd', 'offer', 'rejected'],
+  written: ['1st', '2nd', '3rd', 'offer', 'rejected'],
+  '1st': ['2nd', '3rd', 'offer', 'rejected'],
+  '2nd': ['3rd', 'offer', 'rejected'],
+  '3rd': ['offer', 'rejected'],
+  offer: ['rejected'],
+  rejected: ['applied'],
+}
+
+export function isValidTransition(from: Status, to: Status): boolean {
+  if (from === to) return true
+  return STATUS_TRANSITIONS[from].includes(to)
+}
+
 // ─────────────────────────────────────────────────────────
 // Schemas
 // ─────────────────────────────────────────────────────────

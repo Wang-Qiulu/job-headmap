@@ -81,8 +81,13 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
 
   const handleStatusChange = (s: Status) => {
     if (s === application.status) return
+    try {
+      changeStatus(application.id, s)
+    } catch (err) {
+      toast(err instanceof Error ? err.message : '状态变更失败', 'error')
+      return
+    }
     setDraft({ ...draft, status: s })
-    changeStatus(application.id, s)
     toast(`状态已更新为：${STATUS_LABEL[s]}`, 'success')
   }
 

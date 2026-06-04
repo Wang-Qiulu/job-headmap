@@ -201,7 +201,12 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
                       value={app.status}
                       onChange={(s) => {
                         if (s === app.status) return
-                        changeStatus(app.id, s)
+                        try {
+                          changeStatus(app.id, s)
+                        } catch (err) {
+                          toast(err instanceof Error ? err.message : '状态变更失败', 'error')
+                          return
+                        }
                         toast(`状态已更新为：${STATUS_LABEL[s]}`, 'success')
                       }}
                     />

@@ -9,6 +9,8 @@ interface StatusDropdownProps {
   onChange: (status: Status) => void
   align?: 'left' | 'right'
   size?: 'sm' | 'md'
+  /** When provided, only these statuses are shown in the menu. */
+  options?: readonly Status[]
 }
 
 export function StatusDropdown({
@@ -16,6 +18,7 @@ export function StatusDropdown({
   onChange,
   align = 'left',
   size = 'sm',
+  options,
 }: StatusDropdownProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -29,8 +32,10 @@ export function StatusDropdown({
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
+  const visible = options ?? STATUSES
+
   const isOffer = value === 'offer'
-  const isRejected = value === 'rejected'
+  const isClosed = value === 'rejected'
 
   return (
     <div ref={ref} className="relative">
@@ -44,16 +49,16 @@ export function StatusDropdown({
           'inline-flex items-center gap-1.5 rounded-md border font-mono transition-colors',
           size === 'sm' ? 'h-7 px-2 text-xs' : 'h-8 px-2.5 text-sm',
           isOffer && 'border-success/30 bg-success-soft text-ink-1',
-          !isOffer && !isRejected && 'border-border bg-bg text-ink-1 hover:bg-bg-soft',
-          isRejected && 'border-border bg-bg-mute text-ink-3 hover:bg-bg-soft',
+          !isOffer && !isClosed && 'border-border bg-bg text-ink-1 hover:bg-bg-soft',
+          isClosed && 'border-border bg-bg-mute text-ink-3 hover:bg-bg-soft',
         )}
       >
         <span
           className={cn(
             'inline-block h-1.5 w-1.5 rounded-full',
             isOffer && 'bg-success',
-            !isOffer && !isRejected && 'bg-ink-1',
-            isRejected && 'bg-ink-3',
+            !isOffer && !isClosed && 'bg-ink-1',
+            isClosed && 'bg-ink-3',
           )}
         />
         {STATUS_LABEL[value]}
@@ -71,7 +76,7 @@ export function StatusDropdown({
               align === 'right' ? 'right-0' : 'left-0',
             )}
           >
-            {STATUSES.map((s) => {
+            {visible.map((s) => {
               const isCurrent = s === value
               return (
                 <button

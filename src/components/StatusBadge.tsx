@@ -13,7 +13,7 @@ interface StatusBadgeProps {
  */
 export function StatusBadge({ status, size = 'sm', className }: StatusBadgeProps) {
   const isOffer = status === 'offer'
-  const isRejected = status === 'rejected'
+  const isClosed = status === 'rejected'
 
   return (
     <span
@@ -21,8 +21,8 @@ export function StatusBadge({ status, size = 'sm', className }: StatusBadgeProps
         'inline-flex items-center gap-1.5 rounded-md border font-mono',
         size === 'sm' ? 'h-6 px-2 text-xs' : 'h-7 px-2.5 text-sm',
         isOffer && 'border-success/30 bg-success-soft text-ink-1',
-        !isOffer && !isRejected && 'border-border bg-bg text-ink-1',
-        isRejected && 'border-border bg-bg-mute text-ink-3',
+        !isOffer && !isClosed && 'border-border bg-bg text-ink-1',
+        isClosed && 'border-border bg-bg-mute text-ink-3',
         className,
       )}
     >
@@ -30,8 +30,8 @@ export function StatusBadge({ status, size = 'sm', className }: StatusBadgeProps
         className={cn(
           'inline-block h-1.5 w-1.5 rounded-full',
           isOffer && 'bg-success',
-          !isOffer && !isRejected && 'bg-ink-1',
-          isRejected && 'bg-ink-3',
+          !isOffer && !isClosed && 'bg-ink-1',
+          isClosed && 'bg-ink-3',
         )}
       />
       {STATUS_LABEL[status]}

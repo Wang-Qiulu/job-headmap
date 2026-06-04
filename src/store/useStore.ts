@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 import {
   STORAGE_VERSION,
   StorageSchema,
+  isValidTransition,
   type Application,
   type Status,
 } from '@/types'
@@ -169,6 +170,9 @@ export const useStore = create<AppState>()(
           applications: s.applications.map((a) => {
             if (a.id !== id) return a
             if (a.status === status) return a
+            if (!isValidTransition(a.status, status)) {
+              throw new Error(`非法状态转换: ${a.status} → ${status}`)
+            }
             const at = changedAt ?? toISODateTime()
             return {
               ...a,

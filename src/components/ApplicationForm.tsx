@@ -16,6 +16,13 @@ interface ApplicationFormProps {
 
 const todayISO = () => toISODate(new Date())
 
+// When creating a fresh record, the only legal starting states are
+// "计划中" (haven't applied yet) and "已投递" (already sent). Anything else
+// (interview rounds, offer, rejected) is logically impossible at t=0.
+// The `satisfies` clause ensures every member of NEW_RECORD_OPTIONS is a
+// real Status at compile time.
+const NEW_RECORD_OPTIONS = ['planned', 'applied'] as const satisfies readonly Status[]
+
 export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps) {
   const addApplication = useStore((s) => s.addApplication)
   const updateApplication = useStore((s) => s.updateApplication)
@@ -71,7 +78,12 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
       })
       // Status changes go through `changeStatus` so the timeline is appended
       if (status !== initial.status) {
-        changeStatus(initial.id, status)
+        try {
+          changeStatus(initial.id, status)
+        } catch (err) {
+          toast(err instanceof Error ? err.message : '状态变更失败', 'error')
+          return
+        }
       }
       toast('记录已更新', 'success')
     } else {
@@ -100,7 +112,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
             label="公司"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
-            placeholder="ByteDance"
+            placeholder="公司名称"
             error={errors.company}
             autoFocus
           />
@@ -108,7 +120,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
             label="职位"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
-            placeholder="Senior Frontend Engineer"
+            placeholder="岗位名称"
             error={errors.position}
           />
         </div>
@@ -129,6 +141,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
                 onChange={setStatus}
                 size="md"
                 align="left"
+                options={initial ? undefined : NEW_RECORD_OPTIONS}
               />
             </div>
           </div>
@@ -146,7 +159,7 @@ export function ApplicationForm({ open, initial, onClose }: ApplicationFormProps
           label="备注"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="招聘人、内推、下一步…"
+          placeholder="岗位信息，面试反馈，后续跟进"
           rows={4}
         />
 
