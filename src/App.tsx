@@ -19,8 +19,12 @@ export default function App() {
   const hasHydrated = useStore((s) => s.hasHydrated)
 
   const [search, setSearch] = useState('')
-  const [drawerApp, setDrawerApp] = useState<Application | null>(null)
+  const [drawerId, setDrawerId] = useState<string | null>(null)
   const [formState, setFormState] = useState<FormState>({ open: false })
+
+  // Derive the *live* application from the store so the Drawer always
+  // shows the latest data (status, timeline, etc.) after in-Drawer edits.
+  const drawerApp = drawerId ? applications.find((a) => a.id === drawerId) ?? null : null
 
   // Keyboard shortcut: n = new
   useEffect(() => {
@@ -53,7 +57,7 @@ export default function App() {
         <Heatmap applications={applications} />
         <ApplicationsTable
           search={search}
-          onEdit={(app) => setDrawerApp(app)}
+          onEdit={(app) => setDrawerId(app.id)}
         />
       </main>
 
@@ -75,7 +79,7 @@ export default function App() {
       <ApplicationDrawer
         open={drawerApp !== null}
         application={drawerApp}
-        onClose={() => setDrawerApp(null)}
+        onClose={() => setDrawerId(null)}
       />
 
       <ApplicationForm

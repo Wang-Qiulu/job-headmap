@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Pencil, Trash2, Search } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { useStore } from '@/store/useStore'
-import { StatusDropdown } from './StatusDropdown'
+import { StatusBadge } from './StatusBadge'
 import { STATUSES, STATUS_LABEL, type Application, type Status } from '@/types'
 import { cn } from '@/lib/utils'
 import { toast } from './Toast'
@@ -39,7 +39,6 @@ const statusRank: Record<Status, number> = {
 
 export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
   const applications = useStore((s) => s.applications)
-  const changeStatus = useStore((s) => s.changeStatus)
   const deleteApplication = useStore((s) => s.deleteApplication)
 
   const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all')
@@ -196,20 +195,8 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
                   <td className="px-4 py-2 font-mono text-xs text-ink-2 num">
                     {formatDate(app.applyDate)}
                   </td>
-                  <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
-                    <StatusDropdown
-                      value={app.status}
-                      onChange={(s) => {
-                        if (s === app.status) return
-                        try {
-                          changeStatus(app.id, s)
-                        } catch (err) {
-                          toast(err instanceof Error ? err.message : '状态变更失败', 'error')
-                          return
-                        }
-                        toast(`状态已更新为：${STATUS_LABEL[s]}`, 'success')
-                      }}
-                    />
+                  <td className="px-4 py-2">
+                    <StatusBadge status={app.status} />
                   </td>
                   <td className="px-4 py-2 text-right">
                     <div className="inline-flex items-center gap-1">

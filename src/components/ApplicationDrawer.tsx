@@ -1,12 +1,20 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, ExternalLink, Check, Clock } from 'lucide-react'
+import { X, Trash2, ExternalLink, Check, Clock, AlertTriangle } from 'lucide-react'
 import { Input, Textarea } from './Input'
 import { Button } from './Button'
 import { StatusDropdown } from './StatusDropdown'
 import { useStore } from '@/store/useStore'
-import { cn, formatDate, formatDateTime, formatRelative } from '@/lib/utils'
-import { STATUS_LABEL, type Application, type Status, type StatusChange } from '@/types'
+import { cn, formatDate, formatRelative, toISODate, toISODateTime } from '@/lib/utils'
+import {
+  STATUS_LABEL,
+  TERMINAL_STATUSES,
+  isValidTransition,
+  type Application,
+  type Status,
+  type StatusChange,
+} from '@/types'
+import { parseISO } from 'date-fns'
 import { toast } from './Toast'
 
 interface ApplicationDrawerProps {
@@ -17,6 +25,12 @@ interface ApplicationDrawerProps {
 
 type SaveState = 'idle' | 'saving' | 'saved'
 
+interface PendingStatus {
+  status: Status
+  /** YYYY-MM-DD — the date the change actually happened (editable). */
+  changedAt: string
+}
+
 export function ApplicationDrawer({ open, application, onClose }: ApplicationDrawerProps) {
   const updateApplication = useStore((s) => s.updateApplication)
   const changeStatus = useStore((s) => s.changeStatus)
@@ -24,72 +38,150 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
 
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [draft, setDraft] = useState<Application | null>(application)
+  const [pending, setPending] = useState<PendingStatus | null>(null)
   const saveTimer = useRef<number | null>(null)
+  // Keep the latest draft / application available to flushSave without making
+  // it re-create on every render. Autosave effect updates these refs in lockstep.
+  const latestRef = useRef({ draft, application })
+  latestRef.current = { draft, application }
 
-  // Sync draft when target application changes / opens
+  // Sync draft when target application changes / opens. Also clear any
+  // pending status change from a previous open of the same record.
   useEffect(() => {
     if (application) {
       setDraft(application)
       setSaveState('idle')
+      setPending(null)
     }
   }, [application])
 
-  // ESC closes
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  // Debounced autosave on any draft change. Note: status is excluded — the
-  // store's `updateApplication` type forbids it, and status changes go
-  // through `changeStatus` so the timeline gets appended.
-  useEffect(() => {
-    if (!draft || !application) return
+  // ─────────────────────────────────────────────────────────
+  // Autosave (debounced) + flushSave (synchronous, for close)
+  // ─────────────────────────────────────────────────────────
+  const performSave = () => {
+    const { draft: d, application: a } = latestRef.current
+    if (!d || !a) return
     if (
-      draft.company === application.company &&
-      draft.position === application.position &&
-      draft.applyDate === application.applyDate &&
-      draft.status === application.status &&
-      (draft.url ?? '') === (application.url ?? '') &&
-      (draft.notes ?? '') === (application.notes ?? '')
+      d.company === a.company &&
+      d.position === a.position &&
+      d.applyDate === a.applyDate &&
+      (d.url ?? '') === (a.url ?? '') &&
+      (d.notes ?? '') === (a.notes ?? '')
+    ) {
+      return
+    }
+    updateApplication(a.id, {
+      company: d.company,
+      position: d.position,
+      applyDate: d.applyDate,
+      url: d.url || undefined,
+      notes: d.notes || undefined,
+    })
+    setSaveState('saved')
+    window.setTimeout(() => setSaveState('idle'), 1200)
+  }
+
+  // Debounced autosave on any draft change. status is excluded — see
+  // `handleStatusChange` below. updateApplication is stable (Zustand) so we
+  // intentionally leave it out of deps to keep the effect noise-free.
+  useEffect(() => {
+    const { draft: d, application: a } = latestRef.current
+    if (!d || !a) return
+    if (
+      d.company === a.company &&
+      d.position === a.position &&
+      d.applyDate === a.applyDate &&
+      (d.url ?? '') === (a.url ?? '') &&
+      (d.notes ?? '') === (a.notes ?? '')
     ) {
       return
     }
     setSaveState('saving')
     if (saveTimer.current) window.clearTimeout(saveTimer.current)
-    saveTimer.current = window.setTimeout(() => {
-      updateApplication(application.id, {
-        company: draft.company,
-        position: draft.position,
-        applyDate: draft.applyDate,
-        url: draft.url || undefined,
-        notes: draft.notes || undefined,
-      })
-      setSaveState('saved')
-      window.setTimeout(() => setSaveState('idle'), 1200)
-    }, 500)
+    saveTimer.current = window.setTimeout(performSave, 500)
     return () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current)
     }
-  }, [draft, application, updateApplication])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, application])
+
+  /** Synchronously flush any pending autosave. Called before close. */
+  const flushSave = () => {
+    if (saveTimer.current) {
+      window.clearTimeout(saveTimer.current)
+      saveTimer.current = null
+    }
+    performSave()
+  }
+
+  /** Wrap onClose so user input is never lost to the 500ms debounce. */
+  const handleClose = () => {
+    flushSave()
+    onClose()
+  }
+
+  // ESC closes (with flush)
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        flushSave()
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, onClose])
 
   if (!application || !draft) return null
 
+  // ─────────────────────────────────────────────────────────
+  // Status change: two-step flow (3.1 + 3.4)
+  // ─────────────────────────────────────────────────────────
   const handleStatusChange = (s: Status) => {
-    if (s === application.status) return
-    try {
-      changeStatus(application.id, s)
-    } catch (err) {
-      toast(err instanceof Error ? err.message : '状态变更失败', 'error')
+    // Picking the saved status → clear any pending change
+    if (s === draft.status) {
+      setPending(null)
       return
     }
-    setDraft({ ...draft, status: s })
-    toast(`状态已更新为：${STATUS_LABEL[s]}`, 'success')
+    if (!isValidTransition(draft.status, s)) {
+      toast(
+        `非法状态转换：${STATUS_LABEL[draft.status]} → ${STATUS_LABEL[s]}`,
+        'error',
+      )
+      return
+    }
+    // Terminal → non-terminal needs an extra explicit "are you sure"
+    const fromTerminal = TERMINAL_STATUSES.includes(draft.status)
+    const toTerminal = TERMINAL_STATUSES.includes(s)
+    if (fromTerminal && !toTerminal) {
+      if (!confirm('这条记录已结束，确认重新打开？')) return
+    }
+    setPending({ status: s, changedAt: toISODate(new Date()) })
   }
+
+  const handleCancelPending = () => setPending(null)
+
+  const handleConfirmPending = () => {
+    if (!pending) return
+    const changedAt = toISODateTime(parseISO(pending.changedAt))
+    try {
+      changeStatus(application.id, pending.status, changedAt)
+    } catch (err) {
+      toast(err instanceof Error ? err.message : '状态变更失败', 'error')
+      setPending(null)
+      return
+    }
+    toast(`状态已更新为：${STATUS_LABEL[pending.status]}`, 'success')
+    setPending(null)
+    // draft is reset by the [application] effect once the store propagates
+  }
+
+  const isReopen =
+    pending !== null &&
+    TERMINAL_STATUSES.includes(draft.status) &&
+    !TERMINAL_STATUSES.includes(pending.status)
 
   const handleDelete = () => {
     if (!confirm(`确认删除「${application.company} — ${application.position}」？`))
@@ -112,7 +204,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            onClick={onClose}
+            onClick={handleClose}
           />
           <motion.aside
             initial={{ x: '100%' }}
@@ -133,7 +225,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
                   <Trash2 size={14} />
                 </button>
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="grid h-7 w-7 place-items-center rounded text-ink-3 hover:bg-bg-mute hover:text-ink-1"
                   aria-label="Close"
                 >
@@ -173,15 +265,36 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
 
               {/* Fields */}
               <div className="flex flex-col gap-4 px-6 pt-6">
+                {/* Status + pending confirmation block (3.1 + 3.4) */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-ink-2">状态</label>
                   <div>
                     <StatusDropdown
-                      value={draft.status}
+                      value={pending?.status ?? draft.status}
                       onChange={handleStatusChange}
                       size="md"
                     />
                   </div>
+                  <AnimatePresence>
+                    {pending && (
+                      <motion.div
+                        key="pending"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="overflow-hidden"
+                      >
+                        <PendingStatusBlock
+                          pending={pending}
+                          isReopen={isReopen}
+                          onChange={(v) => setPending({ ...pending, changedAt: v })}
+                          onConfirm={handleConfirmPending}
+                          onCancel={handleCancelPending}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -261,7 +374,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
                             )}
                           </div>
                           <div className="font-mono text-xs text-ink-3">
-                            {formatDateTime(change.changedAt)}
+                            {formatDate(change.changedAt)}
                           </div>
                         </div>
                       </li>
@@ -276,7 +389,7 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
               <div className="font-mono text-xs text-ink-3">
                 ID <span className="text-ink-2">{application.id.slice(0, 8)}</span>
               </div>
-              <Button variant="secondary" onClick={onClose}>
+              <Button variant="secondary" onClick={handleClose}>
                 关闭
               </Button>
             </div>
@@ -284,6 +397,64 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
+// Pending status confirmation block
+// ─────────────────────────────────────────────────────────
+interface PendingStatusBlockProps {
+  pending: PendingStatus
+  isReopen: boolean
+  onChange: (changedAt: string) => void
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+function PendingStatusBlock({
+  pending,
+  isReopen,
+  onChange,
+  onConfirm,
+  onCancel,
+}: PendingStatusBlockProps) {
+  return (
+    <div
+      className={cn(
+        'mt-2 rounded-md border p-3 flex flex-col gap-2.5',
+        isReopen
+          ? 'border-amber-300/40 bg-amber-50/40'
+          : 'border-border bg-bg-soft',
+      )}
+    >
+      <div className="flex items-center gap-2 text-xs">
+        {isReopen && (
+          <AlertTriangle size={12} className="text-amber-600" />
+        )}
+        <span className={cn(isReopen ? 'text-amber-700' : 'text-ink-2')}>
+          {isReopen ? '重新打开' : '状态变更'}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <label className="shrink-0 text-xs text-ink-2">变更日期</label>
+        <input
+          type="date"
+          value={pending.changedAt}
+          onChange={(e) => onChange(e.target.value)}
+          className="font-mono text-xs text-ink-1 focus:outline-none"
+        />
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
+          取消
+        </Button>
+        <Button type="button" size="sm" onClick={onConfirm}>
+          {isReopen ? '确认重新打开' : '确认变更'}
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -316,4 +487,3 @@ function SaveIndicator({ state }: { state: SaveState }) {
   )
 }
 
-export const _ = formatDate
