@@ -17,6 +17,7 @@ type SortDir = 'asc' | 'desc'
 
 const STATUS_FILTERS: Array<{ value: Status | 'all'; label: string }> = [
   { value: 'all', label: '全部' },
+  { value: 'planned', label: STATUS_LABEL.planned },
   { value: 'applied', label: STATUS_LABEL.applied },
   { value: 'written', label: STATUS_LABEL.written },
   { value: '1st', label: STATUS_LABEL['1st'] },

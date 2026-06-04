@@ -100,22 +100,29 @@ export function buildHeatmap(
 }
 
 // ─────────────────────────────────────────────────────────
-// Stats / funnel
+// Funnel — cumulative, history-based
 // ─────────────────────────────────────────────────────────
-export interface Stats {
-  total: number
+// A record's statusHistory lists every status it has *reached*. The funnel
+// counts, for each stage, how many applications have ever touched that
+// stage — regardless of where they are now. So a record that went
+// planned → applied → written → 1st contributes +1 to planned, applied,
+// written, AND 1st, not just the current snapshot.
+export interface FunnelStats {
+  /** Cumulative count: how many applications ever reached "已投递". */
+  applied: number
   written: number
   first: number
   second: number
   third: number
   offer: number
   rejected: number
-  responseRate: number // (written + first + second + third + offer) / total
-  offerRate: number // offer / total
-  interviewRate: number // any interview / (written + interview + offer) — applied->interview conversion
+  /** Of those who ever applied, how many got past the initial screen. */
+  responseRate: number
+  /** Of those who ever applied, how many got an offer. */
+  offerRate: number
 }
 
-export function computeStats(apps: Application[]): Stats {
+export function computeFunnel(apps: Application[]): FunnelStats {
   const counts: Record<Status, number> = {
     planned: 0,
     applied: 0,
@@ -126,21 +133,26 @@ export function computeStats(apps: Application[]): Stats {
     offer: 0,
     rejected: 0,
   }
-  for (const app of apps) counts[app.status]++
+  for (const app of apps) {
+    const reached = new Set<Status>()
+    reached.add(app.status)
+    for (const h of app.statusHistory) reached.add(h.status)
+    for (const s of reached) counts[s]++
+  }
 
-  const total = apps.length
-  const responded = counts.written + counts['1st'] + counts['2nd'] + counts['3rd'] + counts.offer
+  const applied = counts.applied
+  const responded =
+    counts.written + counts['1st'] + counts['2nd'] + counts['3rd'] + counts.offer
   return {
-    total,
+    applied,
     written: counts.written,
     first: counts['1st'],
     second: counts['2nd'],
     third: counts['3rd'],
     offer: counts.offer,
     rejected: counts.rejected,
-    responseRate: total > 0 ? (responded / total) * 100 : 0,
-    offerRate: total > 0 ? (counts.offer / total) * 100 : 0,
-    interviewRate: responded > 0 ? ((counts['1st'] + counts['2nd'] + counts['3rd']) / responded) * 100 : 0,
+    responseRate: applied > 0 ? (responded / applied) * 100 : 0,
+    offerRate: applied > 0 ? (counts.offer / applied) * 100 : 0,
   }
 }
 

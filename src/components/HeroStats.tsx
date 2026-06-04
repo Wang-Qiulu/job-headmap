@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { computeStats, type Stats } from '@/lib/utils'
+import { computeFunnel, type FunnelStats } from '@/lib/utils'
 import type { Application } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -63,12 +63,12 @@ function StatCell({ value, label, sublabel, highlight }: StatCellProps) {
 }
 
 export function HeroStats({ applications }: HeroStatsProps) {
-  const stats: Stats = computeStats(applications)
+  const stats: FunnelStats = computeFunnel(applications)
 
   return (
     <section className="card">
       <div className="flex items-stretch px-6 py-6">
-        <StatCell value={stats.total} label="已投递" sublabel="累计" />
+        <StatCell value={stats.applied} label="已投递" sublabel="累计" />
         <Divider />
         <StatCell value={stats.written} label="笔试" />
         <Divider />
@@ -92,7 +92,7 @@ export function HeroStats({ applications }: HeroStatsProps) {
         </span>
         <span className="text-ink-3">·</span>
         <span className="font-mono">
-          漏斗 <span className="text-ink-1 num">{stats.offer}/{stats.total}</span>
+          漏斗 <span className="text-ink-1 num">{stats.offer}/{stats.applied}</span>
         </span>
       </div>
     </section>
