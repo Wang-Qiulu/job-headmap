@@ -28,10 +28,10 @@ export function Header({ search, onSearchChange, onAdd }: HeaderProps) {
             </svg>
           </div>
           <span className="text-md font-semibold tracking-tight text-ink-1">
-            找工作记录
+            秋招投递记录工具
           </span>
           <span className="hidden font-mono text-xs text-ink-3 sm:inline">
-            v0.1
+            v1.0
           </span>
         </div>
 
