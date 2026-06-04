@@ -153,7 +153,7 @@ export function Heatmap({ applications }: HeatmapProps) {
               <div
                 className="mb-1.5 grid"
                 style={{
-                  gridTemplateColumns: `repeat(${TOTAL_WEEKS}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${TOTAL_WEEKS}, minmax(0, 22px))`,
                   columnGap: `${GAP}px`,
                 }}
               >
@@ -171,7 +171,7 @@ export function Heatmap({ applications }: HeatmapProps) {
               <div
                 className="grid"
                 style={{
-                  gridTemplateColumns: `repeat(${TOTAL_WEEKS}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${TOTAL_WEEKS}, minmax(0, 22px))`,
                   columnGap: `${GAP}px`,
                 }}
                 onMouseLeave={() => setHover(null)}
@@ -294,7 +294,7 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors',
+              'inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-sm font-medium transition-colors',
               active
                 ? 'bg-ink-1 text-bg'
                 : 'text-ink-2 hover:text-ink-1',

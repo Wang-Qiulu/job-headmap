@@ -82,7 +82,7 @@ export function HeroStats({ applications }: HeroStatsProps) {
         <Divider />
         <StatCell value={stats.rejected} label="已拒绝" />
       </div>
-      <div className="flex items-center gap-3 border-t border-border-soft px-6 py-3 text-xs text-ink-2">
+      <div className="flex items-center gap-3 border-t border-border-soft px-6 py-3 text-sm text-ink-2">
         <span className="font-mono">
           回复率 <span className="text-ink-1 num">{stats.replyRate.toFixed(1)}%</span>
         </span>

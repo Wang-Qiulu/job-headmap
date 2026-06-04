@@ -127,7 +127,7 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
                 setPage(0)
               }}
               className={cn(
-                'inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors',
+                'inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm transition-colors',
                 active
                   ? 'text-ink-1'
                   : 'text-ink-3 hover:text-ink-2',
@@ -143,7 +143,7 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
               </span>
               <span
                 className={cn(
-                  'num rounded px-1.5 py-0.5 font-mono text-[10px]',
+                  'num rounded px-1.5 py-0.5 font-mono text-xs',
                   active ? 'bg-ink-1 text-bg' : 'bg-bg-mute text-ink-2',
                 )}
               >
@@ -158,7 +158,7 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border bg-bg-soft text-xs uppercase tracking-wider text-ink-3">
+            <tr className="border-b border-border bg-bg-soft text-sm uppercase tracking-wider text-ink-3">
               <Th onClick={() => handleSort('company')} active={sortKey === 'company'} dir={sortDir}>
                 公司
               </Th>
@@ -282,7 +282,7 @@ function Th({
       <button
         onClick={onClick}
         className={cn(
-          'inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider',
+          'inline-flex items-center gap-1 font-mono text-sm uppercase tracking-wider',
           active ? 'text-ink-1' : 'text-ink-3',
         )}
       >
