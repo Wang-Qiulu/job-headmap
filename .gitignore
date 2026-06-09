@@ -43,3 +43,7 @@ vite.config.d.ts
 vite.config.js
 .workbuddy/memory/2026-06-04.md
 需求文档/bugfix-and-development-plan.md
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/gen/schemas/
