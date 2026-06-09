@@ -6,6 +6,8 @@ import { StatusBadge } from './StatusBadge'
 import { STATUSES, STATUS_LABEL, type Application, type Status } from '@/types'
 import { cn } from '@/lib/utils'
 import { toast } from './Toast'
+import { Button } from './Button'
+import { Modal } from './Modal'
 
 interface ApplicationsTableProps {
   search: string
@@ -46,6 +48,7 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('applyDate')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [page, setPage] = useState(0)
+  const [pendingDelete, setPendingDelete] = useState<Application | null>(null)
   const PAGE_SIZE = 20
 
   // Count per status (for the filter chip badges)
@@ -93,9 +96,14 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
   }
 
   const onDelete = (app: Application) => {
-    if (!confirm(`确认删除「${app.company} — ${app.position}」？`)) return
-    deleteApplication(app.id)
+    setPendingDelete(app)
+  }
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return
+    deleteApplication(pendingDelete.id)
     toast('记录已删除', 'success')
+    setPendingDelete(null)
   }
 
   if (applications.length === 0) {
@@ -262,6 +270,24 @@ export function ApplicationsTable({ search, onEdit }: ApplicationsTableProps) {
           </div>
         </div>
       )}
+
+      <Modal
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title="确认删除"
+      >
+        <p className="mb-5 text-sm text-ink-2">
+          确认删除「{pendingDelete?.company} — {pendingDelete?.position}」？此操作不可恢复。
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setPendingDelete(null)}>
+            取消
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            删除
+          </Button>
+        </div>
+      </Modal>
     </section>
   )
 }

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trash2, ExternalLink, Check, Clock, AlertTriangle } from 'lucide-react'
 import { Input, Textarea } from './Input'
 import { Button } from './Button'
+import { Modal } from './Modal'
 import { StatusDropdown } from './StatusDropdown'
 import { useStore } from '@/store/useStore'
 import { cn, formatDate, formatRelative, toISODate, toISODateTime } from '@/lib/utils'
@@ -39,6 +40,8 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [draft, setDraft] = useState<Application | null>(application)
   const [pending, setPending] = useState<PendingStatus | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmReopen, setConfirmReopen] = useState(false)
   const saveTimer = useRef<number | null>(null)
   // Keep the latest draft / application available to flushSave without making
   // it re-create on every render. Autosave effect updates these refs in lockstep.
@@ -152,11 +155,18 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
       )
       return
     }
-    // Terminal → non-terminal needs an extra explicit "are you sure"
+    // Terminal → non-terminal needs an extra explicit "are you sure".
+    // We don't apply the change here — the confirm modal sets
+    // `confirmReopen`; the user then sees the inline PendingStatus block
+    // and hits "Save" there to actually commit. (Two-step by design:
+    // Modal confirms *intent to leave terminal*, inline confirms *the
+    // target status + date*.)
     const fromTerminal = TERMINAL_STATUSES.includes(draft.status)
     const toTerminal = TERMINAL_STATUSES.includes(s)
     if (fromTerminal && !toTerminal) {
-      if (!confirm('这条记录已结束，确认重新打开？')) return
+      setPending({ status: s, changedAt: toISODate(new Date()) })
+      setConfirmReopen(true)
+      return
     }
     setPending({ status: s, changedAt: toISODate(new Date()) })
   }
@@ -184,10 +194,13 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
     !TERMINAL_STATUSES.includes(pending.status)
 
   const handleDelete = () => {
-    if (!confirm(`确认删除「${application.company} — ${application.position}」？`))
-      return
+    setConfirmDelete(true)
+  }
+
+  const performDelete = () => {
     deleteApplication(application.id)
     toast('记录已删除', 'success')
+    setConfirmDelete(false)
     onClose()
   }
 
@@ -394,6 +407,51 @@ export function ApplicationDrawer({ open, application, onClose }: ApplicationDra
               </Button>
             </div>
           </motion.aside>
+
+          <Modal
+            open={confirmDelete}
+            onClose={() => setConfirmDelete(false)}
+            title="确认删除"
+          >
+            <p className="mb-5 text-sm text-ink-2">
+              确认删除「{application.company} — {application.position}」？此操作不可恢复。
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
+                取消
+              </Button>
+              <Button variant="danger" onClick={performDelete}>
+                删除
+              </Button>
+            </div>
+          </Modal>
+
+          <Modal
+            open={confirmReopen}
+            onClose={() => {
+              setConfirmReopen(false)
+              setPending(null)
+            }}
+            title="重新打开这条记录？"
+          >
+            <p className="mb-5 text-sm text-ink-2">
+              当前状态为「{STATUS_LABEL[application.status]}」，已属于结束态。重新打开后可以继续记录后续状态变更。
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setConfirmReopen(false)
+                  setPending(null)
+                }}
+              >
+                取消
+              </Button>
+              <Button variant="primary" onClick={() => setConfirmReopen(false)}>
+                继续
+              </Button>
+            </div>
+          </Modal>
         </>
       )}
     </AnimatePresence>
