@@ -1,6 +1,6 @@
 [package]
 name = "job_headmap"
-version = "0.1.0"
+version = "2.0.0"
 description = "Job Headmap desktop"
 authors = ["Job Dashboard Dev"]
 edition = "2021"
