@@ -1,6 +1,6 @@
 [package]
 name = "job_headmap"
-version = "2.0.0"
+version = "2.0.1"
 description = "投递工具 — 本地优先的秋招投递记录"
 authors = ["Job Dashboard Dev"]
 edition = "2021"
