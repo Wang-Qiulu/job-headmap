@@ -1,7 +1,7 @@
 [package]
 name = "job_headmap"
 version = "2.0.0"
-description = "Job Headmap desktop"
+description = "投递工具 — 本地优先的秋招投递记录"
 authors = ["Job Dashboard Dev"]
 edition = "2021"
 rust-version = "1.77"

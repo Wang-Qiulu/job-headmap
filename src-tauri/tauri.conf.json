@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "求职面板",
+        "title": "投递工具",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
@@ -36,8 +36,8 @@
       "icons/icon.ico"
     ],
     "category": "Productivity",
-    "shortDescription": "本地优先的求职投递追踪",
-    "longDescription": "本地优先的求职投递记录工具，数据存储在 ~/Library/Application Support/com.jobheadmap.app/",
+    "shortDescription": "本地优先的秋招投递记录工具",
+    "longDescription": "投递工具——本地优先的秋招投递记录，数据存储在 ~/Library/Application Support/com.jobheadmap.dashboard/",
     "macOS": {
       "minimumSystemVersion": "10.15",
       "frameworks": [],
