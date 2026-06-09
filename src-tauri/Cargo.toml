@@ -21,3 +21,12 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "std"
 
 [dev-dependencies]
 tempfile = "3"
+
+# Optimise release builds for binary size — the user-facing artifact is a DMG;
+# shaving MBs matters more than peak CPU speed for this app.
+[profile.release]
+opt-level = "z"   # size-optimised
+lto = true        # whole-program link-time optimisation
+codegen-units = 1 # better optimisation, slower compile
+strip = true      # remove debug symbols
+panic = "abort"   # no unwinding tables
