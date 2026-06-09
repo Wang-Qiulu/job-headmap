@@ -1,24 +1,23 @@
-# 求职面板 / Job Headmap
+# 投递工具 / Job Headmap
 
 > A local-first job application tracker — data lives in a real file on your disk, not a browser tab.
 > 本地优先的求职投递记录工具——数据真存在你硬盘上的一个 JSON 文件里，不在浏览器缓存里。
 
-## 安装（macOS）
+## 安装（macOS Apple Silicon）
 
-下载 `JobHeadmap_x.x.x_aarch64.dmg`（Apple Silicon），然后：
+1. 从 [Releases 页面](https://github.com/Wang-Qiulu/job-headmap/releases) 下载最新的 `JobHeadmap_x.x.x_aarch64.dmg`
+2. 双击挂载 DMG
+3. **把 `JobHeadmap.app` 拖到 Applications 文件夹**
 
-1. 双击 DMG 挂载
-2. **把 `JobHeadmap.app` 拖到 Applications 文件夹**
-3. 打开 Applications，**右键点 JobHeadmap → 打开** → 弹窗里再点"打开"
-4. 之后双击就行了
-
-> 第 3 步是因为这个 App 没买 Apple Developer 证书（$99/年），macOS 默认拦下未签名应用。"右键打开"是 Apple 留的合法绕过通道，第一次开过之后系统会记住。
-
-如果出现"已损坏，无法打开"提示（macOS 偶发误报），在终端跑：
+**如果出现"已损坏，无法打开"（macOS 15 Sequoia 必现）**，在**终端**跑这一行命令：
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/JobHeadmap.app
 ```
+
+跑完再双击就能开了。这条命令把 macOS 给 App 打的"从互联网下载"标记清掉——App 文件本身没坏，是 macOS 嫌它没花 $99/年买 Apple Developer 证书。我们没付，所以只能手动绕一下。
+
+> macOS 14 及更早版本可以走"右键 → 打开"绕过；15 Sequoia 把它收紧到只能用 `xattr` 这条路。
 
 ## 数据存哪儿
 
