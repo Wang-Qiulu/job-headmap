@@ -9,6 +9,7 @@ import {
   type Status,
 } from '@/types'
 import { toISODate, toISODateTime } from '@/lib/utils'
+import { createAppStorage } from '@/lib/persistStorage'
 
 const STORAGE_KEY = 'job-dashboard:v1'
 
@@ -197,22 +198,49 @@ export const useStore = create<AppState>()(
     }),
     {
       name: STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => createAppStorage()),
       version: STORAGE_VERSION,
-      onRehydrateStorage: () => (state) => {
-        if (!state) return
+      // Persist only the application list; transient flags like hasHydrated stay in memory.
+      partialize: (s) => ({ applications: s.applications }),
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state) return
         // Validate on rehydrate; drop corrupt entries silently
         const result = StorageSchema.safeParse({
-          version: state.applications ? STORAGE_VERSION : STORAGE_VERSION,
+          version: STORAGE_VERSION,
           applications: state.applications ?? [],
         })
-        if (result.success) {
-          state.applications = result.data.applications
-        } else {
-          state.applications = []
-        }
+        state.applications = result.success ? result.data.applications : []
         state.hasHydrated = true
       },
     },
   ),
 )
+
+// First-launch bootstrap: if storage is empty, flush the in-code sample data
+// once after hydrate finishes so the user sees fixtures on next start and the
+// data file actually appears under app_data_dir(). Best-effort: errors swallowed.
+void (async () => {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = await createAppStorage().getItem(STORAGE_KEY)
+    if (raw != null) return
+
+    // No-op set re-triggers persist write with current state -> creates data.json.
+    const flush = () =>
+      useStore.setState({ applications: useStore.getState().applications })
+
+    // hydrate may already be done (subscribe only fires on FUTURE changes), so
+    // check the current state first; otherwise wait for the hasHydrated flip.
+    if (useStore.getState().hasHydrated) {
+      flush()
+    } else {
+      const unsub = useStore.subscribe((s) => {
+        if (!s.hasHydrated) return
+        unsub()
+        flush()
+      })
+    }
+  } catch {
+    /* best-effort */
+  }
+})()
