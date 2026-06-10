@@ -1,5 +1,7 @@
-import { Search, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Search, Plus, Download } from 'lucide-react'
 import { Button } from './Button'
+import { ExportModal } from './ExportModal'
 
 interface HeaderProps {
   search: string
@@ -8,6 +10,8 @@ interface HeaderProps {
 }
 
 export function Header({ search, onSearchChange, onAdd }: HeaderProps) {
+  const [exportOpen, setExportOpen] = useState(false)
+
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/80 backdrop-blur-md">
       <div className="container-page flex h-14 items-center justify-between gap-6">
@@ -31,7 +35,7 @@ export function Header({ search, onSearchChange, onAdd }: HeaderProps) {
             投递工具
           </span>
           <span className="hidden font-mono text-xs text-ink-3 sm:inline">
-            v2.0
+            v2.2
           </span>
         </div>
 
@@ -49,6 +53,14 @@ export function Header({ search, onSearchChange, onAdd }: HeaderProps) {
               className="h-8 w-full rounded-md border border-border bg-bg-mute pl-8 pr-3 font-mono text-xs text-ink-1 placeholder:text-ink-3 focus:border-ink-1 focus:bg-bg focus:outline-none"
             />
           </div>
+          <button
+            onClick={() => setExportOpen(true)}
+            className="grid h-7 w-7 place-items-center rounded text-ink-3 hover:bg-bg-mute hover:text-ink-1"
+            aria-label="导出 CSV"
+            title="导出 CSV"
+          >
+            <Download size={14} />
+          </button>
           <Button onClick={onAdd} size="md" className="font-mono">
             <Plus size={14} strokeWidth={2.5} />
             <span className="hidden sm:inline">新建</span>
@@ -56,6 +68,8 @@ export function Header({ search, onSearchChange, onAdd }: HeaderProps) {
           </Button>
         </div>
       </div>
+
+      <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </header>
   )
 }

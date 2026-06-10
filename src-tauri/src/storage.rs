@@ -101,3 +101,42 @@ fn prune_backups(backup_dir: &PathBuf) -> Result<(), String> {
     }
     Ok(())
 }
+
+/// Writes `content` to `path` atomically. Used by the CSV export feature:
+/// the frontend asks the user for a save location via the dialog plugin, then
+/// hands that path here. We don't backup the export — the source of truth
+/// stays in `data.json`; this is just a snapshot the user wants to take.
+#[tauri::command]
+pub async fn write_file(path: String, content: String) -> Result<(), String> {
+    let target = std::path::PathBuf::from(&path);
+
+    // Ensure parent directory exists (the dialog returns a path the user picked,
+    // so this should normally be present, but be defensive).
+    if let Some(parent) = target.parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent).map_err(|e| format!("create parent: {e}"))?;
+        }
+    }
+
+    // Write to .tmp first, fsync, then rename — same atomic pattern as save_data.
+    // This prevents a half-written file from being observed if the export is
+    // killed mid-write (e.g. user hits cancel during a large dump).
+    let tmp_path = target.with_extension({
+        let mut ext = target.extension().unwrap_or_default().to_os_string();
+        ext.push(".tmp");
+        ext
+    });
+    {
+        let mut f = fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(&tmp_path)
+            .map_err(|e| format!("open tmp: {e}"))?;
+        std::io::Write::write_all(&mut f, content.as_bytes())
+            .map_err(|e| format!("write tmp: {e}"))?;
+        f.sync_all().map_err(|e| format!("fsync tmp: {e}"))?;
+    }
+    fs::rename(&tmp_path, &target).map_err(|e| format!("rename: {e}"))?;
+    Ok(())
+}
